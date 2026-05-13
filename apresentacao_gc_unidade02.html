@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apresentação GC Unidade 02</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>mermaid.initialize({ startOnLoad: true, theme: 'neutral' });</script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #fff; overflow: hidden; }
+    .slide { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; padding: 60px 80px; display: flex; flex-direction: column; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.25s; z-index: 1; }
+    .slide.active { opacity: 1; pointer-events: all; z-index: 2; }
+    .slide-number { position: absolute; bottom: 20px; right: 30px; font-size: 13px; opacity: 0.5; }
+    .controls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; z-index: 100; }
+    .controls button { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+    .controls button:hover { background: rgba(255,255,255,0.3); }
+    .progress { position: fixed; top: 0; left: 0; height: 3px; background: #3b82f6; transition: width 0.3s; z-index: 100; }
+
+    /* Slide backgrounds */
+    .slide-capa { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); }
+    .slide-tema { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+    .slide-blue { background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); }
+    .slide-green { background: linear-gradient(135deg, #0f2027 0%, #134e35 100%); }
+    .slide-light { background: #f8fafc; color: #111; }
+    .slide-light .tag { background: #dbeafe; color: #1d4ed8; }
+    .slide-light .box { background: #fff; border: 1px solid #e5e7eb; }
+    .slide-light .subtitle { color: #6b7280; }
+    .slide-dark { background: linear-gradient(135deg, #1a1a2e 0%, #0f172a 100%); }
+
+    /* Typography */
+    .tag { display: inline-block; background: rgba(59,130,246,0.25); color: #93c5fd; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase; }
+    h1.main { font-size: 42px; font-weight: 800; line-height: 1.2; margin-bottom: 16px; }
+    h2.slide-title { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; opacity: 0.7; margin-bottom: 32px; }
+    p.body-text { font-size: 16px; line-height: 1.8; opacity: 0.85; }
+
+    /* Components */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 24px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 24px; }
+    .box { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 20px; }
+    .box h3 { font-size: 14px; font-weight: 700; margin-bottom: 8px; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.5px; }
+    .box p, .box li { font-size: 14px; line-height: 1.7; opacity: 0.85; }
+    .box ul { padding-left: 16px; }
+    .avatar-big { width: 72px; height: 72px; border-radius: 50%; background: rgba(59,130,246,0.3); border: 2px solid #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 800; color: #93c5fd; flex-shrink: 0; }
+    .profile-row { display: flex; align-items: flex-start; gap: 20px; margin-top: 20px; }
+    .profile-info { flex: 1; }
+    .profile-info h3 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .profile-info .role { font-size: 14px; opacity: 0.6; margin-bottom: 16px; }
+    .field { display: grid; grid-template-columns: 160px 1fr; gap: 8px; padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 14px; }
+    .field:last-child { border-bottom: none; }
+    .field-k { opacity: 0.55; font-weight: 600; }
+    .rp-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 16px; }
+    .rp-table th { text-align: left; padding: 8px 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); font-weight: 700; font-size: 12px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .rp-table td { padding: 8px 10px; border: 1px solid rgba(255,255,255,0.08); line-height: 1.5; opacity: 0.85; vertical-align: top; }
+    .rp-table tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+    .id-chip { display: inline-block; background: rgba(59,130,246,0.3); color: #93c5fd; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; }
+    .highlight-box { background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.4); border-radius: 10px; padding: 20px 24px; margin-top: 20px; }
+    .diagram-slide { background: #fff; color: #111; padding: 30px 50px; }
+    .diagram-slide .tag { background: #dbeafe; color: #1d4ed8; margin-bottom: 8px; }
+    .diagram-slide h2 { color: #111; font-size: 22px; margin-bottom: 2px; }
+    .diagram-slide .subtitle { color: #6b7280; font-size: 12px; margin-bottom: 8px; }
+    .diagram-slide .diagram-wrap { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px; margin-top: 4px; overflow: hidden; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+    .diagram-slide .mermaid { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+    .diagram-slide .mermaid svg { max-width: 100% !important; max-height: 100% !important; width: auto !important; height: auto !important; }
+    .learn-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+    .learn-num { width: 32px; height: 32px; border-radius: 50%; background: rgba(59,130,246,0.25); color: #93c5fd; font-weight: 800; font-size: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .learn-text { font-size: 15px; line-height: 1.6; opacity: 0.85; padding-top: 4px; }
+    .ref-item { font-size: 14px; opacity: 0.8; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.08); line-height: 1.6; }
+    .ref-item:last-child { border-bottom: none; }
+    .big-stat { text-align: center; }
+    .big-stat .num { font-size: 48px; font-weight: 800; color: #60a5fa; }
+    .big-stat .label { font-size: 14px; opacity: 0.6; margin-top: 4px; }
+    .cta { display: inline-block; background: #3b82f6; color: #fff; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; margin-top: 24px; }
+  </style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<!-- SLIDE 1: Capa -->
+<div class="slide slide-capa active" id="s1">
+  <div class="tag">Gestão do Conhecimento — Unidade 02</div>
+  <h1 class="main">Aquisição e Modelagem do<br>Conhecimento Especialista</h1>
+  <p class="subtitle">Domínio: Marketing Digital — Especialista: Ricardo Campos Mendonça</p>
+  <div style="margin-top: 48px; opacity: 0.5; font-size: 13px;">
+    UCSal &nbsp;·&nbsp; Engenharia de Software &nbsp;·&nbsp; Maio de 2026
+  </div>
+  <div class="slide-number">1 / 10</div>
+</div>
+
+<!-- SLIDE 2: Tema e Contexto -->
+<div class="slide slide-blue" id="s2">
+  <div class="tag">Slide 2 — Tema e Contexto</div>
+  <h2 class="slide-title">Domínio escolhido: Marketing Digital</h2>
+  <p class="subtitle">Por que é relevante? O que foi demandado pelo cliente?</p>
+  <div class="grid-3" style="margin-top: 28px;">
+    <div class="box">
+      <h3>Domínio</h3>
+      <p>Estratégia de Marketing Digital para pequenas e médias empresas com presença digital incipiente.</p>
+    </div>
+    <div class="box">
+      <h3>Relevância</h3>
+      <p>84% das PMEs brasileiras relatam dificuldade em definir canais digitais e interpretar métricas de desempenho.</p>
+    </div>
+    <div class="box">
+      <h3>Demanda do cliente</h3>
+      <p>Empresa local com queda de vendas online busca diagnóstico e recomendação de estratégia de baixo custo.</p>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top: 24px;">
+    <p style="font-size: 14px; opacity: 0.9;">O conhecimento especialista nessa área é predominantemente <strong>tácito</strong>: o especialista toma decisões com base em padrões de experiência que raramente são documentados ou formalizados.</p>
+  </div>
+  <div class="slide-number">2 / 10</div>
+</div>
+
+<!-- SLIDE 3: Especialista -->
+<div class="slide slide-dark" id="s3">
+  <div class="tag">Slide 3 — Especialista</div>
+  <h2 class="slide-title">Identificação do Especialista</h2>
+  <div class="profile-row">
+    <div class="avatar-big">RC</div>
+    <div class="profile-info">
+      <h3>Ricardo Campos Mendonça</h3>
+      <div class="role">Consultor Sênior de Marketing Digital · 17 anos de experiência</div>
+      <div class="field"><span class="field-k">Formação</span><span>Comunicação Social (Pub. e Propaganda) · Pós em Marketing Estratégico</span></div>
+      <div class="field"><span class="field-k">Empresa</span><span>Agência Vektor Comunicação Integrada — Salvador, BA</span></div>
+      <div class="field"><span class="field-k">Especialidade</span><span>Diagnóstico de marketing digital, gestão de canais pagos e orgânicos, análise de métricas</span></div>
+      <div class="field"><span class="field-k">Contato</span><span>ricardo.mendonca@vektorcomunicacao.com.br</span></div>
+    </div>
+  </div>
+  <div class="slide-number">3 / 10</div>
+</div>
+
+<!-- SLIDE 4: Técnicas -->
+<div class="slide slide-blue" id="s4">
+  <div class="tag">Slide 4 — Técnicas de Coleta</div>
+  <h2 class="slide-title">Técnica Utilizada</h2>
+  <p class="subtitle">Entrevista semiestruturada — 06/05/2026 · 50 min · Agência Vektor</p>
+  <div class="grid-2">
+    <div class="box">
+      <h3>Por que semiestruturada?</h3>
+      <p>Permite seguir um roteiro-guia, mas abre espaço para aprofundamento conforme o raciocínio do especialista se desenvolve — essencial para capturar critérios <em>implícitos</em> de decisão.</p>
+    </div>
+    <div class="box">
+      <h3>Roteiro aplicado</h3>
+      <ul>
+        <li>Primeiro passo com um novo cliente</li>
+        <li>Critérios de seleção de canais</li>
+        <li>Sinais de campanha mal-sucedida</li>
+        <li>Gestão de conflito com cliente</li>
+        <li>Critério de sucesso de uma estratégia</li>
+        <li>Processo de queda de vendas online</li>
+      </ul>
+    </div>
+  </div>
+  <div class="highlight-box">
+    <p style="font-size: 14px; opacity: 0.9;">A abordagem semiestruturada foi a mais adequada ao domínio: o conhecimento do especialista é predominantemente tácito e emerge melhor em diálogo livre do que em respostas a perguntas fechadas.</p>
+  </div>
+  <div class="slide-number">4 / 10</div>
+</div>
+
+<!-- SLIDE 5: Resumo do Problema -->
+<div class="slide slide-dark" id="s5">
+  <div class="tag">Slide 5 — Problema do Cliente (item 4.1)</div>
+  <h2 class="slide-title">Situação-Problema</h2>
+  <div class="grid-2" style="margin-top: 28px;">
+    <div>
+      <p class="body-text" style="font-size: 15px;">O cliente típico é uma <strong>PME com presença digital incipiente</strong>: e-commerce em estágio inicial ou negócio local com queda de vendas, baixo engajamento ou dificuldade de conversão.</p>
+      <br>
+      <p class="body-text" style="font-size: 15px;">O contexto envolve orçamento limitado, ausência de estratégia de conteúdo e comunicação inconsistente entre canais.</p>
+    </div>
+    <div>
+      <div class="box" style="margin-bottom: 12px;">
+        <h3>Informações que o especialista recebe</h3>
+        <ul style="font-size: 14px; opacity: 0.85; padding-left: 16px; line-height: 1.8;">
+          <li>Setor de atuação</li>
+          <li>Público-alvo presumido pelo cliente</li>
+          <li>Canais digitais ativos</li>
+          <li>Dados históricos de desempenho</li>
+          <li>Objetivos de curto prazo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-number">5 / 10</div>
+</div>
+
+<!-- SLIDE 6: Regras de Produção -->
+<div class="slide slide-light" id="s6">
+  <div class="tag">Slide 6 — Regras de Produção (item 4.2)</div>
+  <h2 class="slide-title" style="color: #111;">Regras de Produção — R1 a R8</h2>
+  <table class="rp-table" style="color: #111;">
+    <thead>
+      <tr>
+        <th style="width: 50px; background: #f1f5f9; border-color: #e2e8f0; color: #374151;">ID</th>
+        <th style="background: #f1f5f9; border-color: #e2e8f0; color: #374151;">Condição (SE...)</th>
+        <th style="background: #f1f5f9; border-color: #e2e8f0; color: #374151;">Conclusão (ENTÃO...)</th>
+      </tr>
+    </thead>
+    <tbody style="color: #374151;">
+      <tr>
+        <td><span class="id-chip">R1</span></td>
+        <td>Sem dados históricos E sem público-alvo definido</td>
+        <td>Realizar diagnóstico completo (raio-x do negócio)</td>
+      </tr>
+      <tr>
+        <td><span class="id-chip">R2</span></td>
+        <td>Objetivo = conversão rápida E orçamento médio/alto</td>
+        <td>Priorizar Google Ads com intenção de compra</td>
+      </tr>
+      <tr>
+        <td><span class="id-chip">R3</span></td>
+        <td>Objetivo = construção de marca E público jovem (18–35)</td>
+        <td>Priorizar Instagram e/ou TikTok</td>
+      </tr>
+      <tr>
+        <td><span class="id-chip">R4</span></td>
+        <td>Orçamento limitado E prazo flexível</td>
+        <td>Investir em SEO e conteúdo orgânico</td>
+      </tr>
+      <tr>
+        <td><span class="id-chip">R5</span></td>
+        <td>CTR &lt; 1% OU Rejeição &gt; 70% OU CAC &gt; ticket médio</td>
+        <td>Revisar campanha: público, mensagem e landing page</td>
+      </tr>
+      <tr>
+        <td><span class="id-chip">R6</span></td>
+        <td>Queda de vendas E tráfego adequado</td>
+        <td>Problema de conversão — revisar oferta, preço e página</td>
+      </tr>
+      <tr>
+        <td><span class="id-chip">R7</span></td>
+        <td>Queda de vendas E tráfego baixo</td>
+        <td>Problema de visibilidade — SEO ou mídia paga</td>
+      </tr>
+      <tr>
+        <td><span class="id-chip">R8</span></td>
+        <td>KPIs atingidos E cliente autônomo</td>
+        <td>Estratégia bem-sucedida — encerrar consultoria ativa</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="slide-number" style="color: #aaa;">6 / 10</div>
+</div>
+
+<!-- SLIDE 7: Fluxograma -->
+<div class="slide diagram-slide" id="s7">
+  <div class="tag">Slide 7 — Fluxograma de Decisão (item 4.3)</div>
+  <h2>Fluxograma de Decisão</h2>
+  <p class="subtitle">Caminho do raciocínio do especialista — R1 a R8</p>
+  <div class="diagram-wrap">
+    <div class="mermaid">
+flowchart TD
+    A([Inicio]) --> B[Cliente com problema de marketing]
+    B --> C{Tem dados historicos\ne publico-alvo?}
+    C -->|Nao - R1| D[Diagnostico Completo\nRaio-X do Negocio]
+    D --> E{Ha queda de\nvendas online?}
+    C -->|Sim| E
+    E -->|Sim| F{Trafego adequado?}
+    E -->|Nao| I{Objetivo principal?}
+    F -->|Sim - R6| G[Problema CONVERSAO\nRevisar oferta e pagina]
+    F -->|Nao - R7| H[Problema VISIBILIDADE\nSEO ou midia paga]
+    I -->|Conversao| J{Orcamento\nmedio ou alto?}
+    I -->|Marca| M{Publico jovem\n18-35 anos?}
+    J -->|Sim - R2| K[Google Ads]
+    J -->|Nao - R4| L[SEO Organico]
+    M -->|Sim - R3| N[Instagram TikTok]
+    M -->|Nao - R4| L
+    G --> P{Alertas de\ndesempenho?}
+    H --> P
+    K --> P
+    L --> P
+    N --> P
+    P -->|Sim - R5| Q[Revisar campanha]
+    Q --> R{KPIs atingidos E\ncliente autonomo?}
+    P -->|Nao| R
+    R -->|Sim - R8| S([Estrategia bem-sucedida])
+    R -->|Nao| T[Novo ciclo 30 dias]
+    T --> P
+    style D fill:#dbeafe,stroke:#3b82f6
+    style G fill:#dcfce7,stroke:#16a34a
+    style H fill:#dcfce7,stroke:#16a34a
+    style K fill:#dcfce7,stroke:#16a34a
+    style L fill:#dcfce7,stroke:#16a34a
+    style N fill:#dcfce7,stroke:#16a34a
+    style Q fill:#fef9c3,stroke:#ca8a04
+    style S fill:#bbf7d0,stroke:#15803d
+    </div>
+  </div>
+  <div class="slide-number" style="color: #aaa;">7 / 10</div>
+</div>
+
+<!-- SLIDE 8: Rede Semântica -->
+<div class="slide diagram-slide" id="s8">
+  <div class="tag">Slide 8 — Rede Semântica (item 4.4)</div>
+  <h2>Rede Semântica</h2>
+  <p class="subtitle">Estrutura mental do especialista sobre o domínio de Marketing Digital</p>
+  <div class="diagram-wrap">
+    <div class="mermaid">
+graph LR
+    MD(("Marketing\nDigital")) -->|depende-de| DIAG[Diagnostico]
+    MD -->|parte-de| ESTRAT[Estrategia]
+    MD -->|necessita-de| PA[Publico-alvo]
+    MD -->|necessita-de| ORC[Orcamento]
+    CLI[Cliente] -->|necessita-de| DIAG
+    DIAG -->|realiza-acao| RX[Raio-X do Negocio]
+    ESTRAT -->|depende-de| OBJ[Objetivo]
+    ESTRAT -->|depende-de| CAN[Canais Digitais]
+    ESTRAT -->|depende-de| MET[Metricas]
+    OBJ -->|e-um-tipo-de| CONV[Conversao]
+    OBJ -->|e-um-tipo-de| AWA[Awareness]
+    OBJ -->|e-um-tipo-de| FID[Fidelizacao]
+    CAN -->|e-um-tipo-de| GADS[Google Ads]
+    CAN -->|e-um-tipo-de| SEO[SEO Organico]
+    CAN -->|e-um-tipo-de| INST[Instagram TikTok]
+    MET -->|e-um-tipo-de| CTR[CTR]
+    MET -->|e-um-tipo-de| CAC[CAC]
+    MET -->|e-um-tipo-de| KPI[KPIs]
+    PA -->|depende-de| OBJ
+    ORC -->|determina| CAN
+    style MD fill:#dbeafe,stroke:#3b82f6,font-weight:bold
+    style ESTRAT fill:#dcfce7,stroke:#16a34a
+    style DIAG fill:#fef9c3,stroke:#ca8a04
+    style MET fill:#fdf4ff,stroke:#a855f7
+    style CAN fill:#fff7ed,stroke:#ea580c
+    style OBJ fill:#f0f9ff,stroke:#0284c7
+    </div>
+  </div>
+  <div class="slide-number" style="color: #aaa;">8 / 10</div>
+</div>
+
+<!-- SLIDE 9: Aprendizados -->
+<div class="slide slide-green" id="s9">
+  <div class="tag">Slide 9 — Aprendizados</div>
+  <h2 class="slide-title">O que aprendemos com a experiência?</h2>
+  <div style="margin-top: 28px;">
+    <div class="learn-item">
+      <div class="learn-num">1</div>
+      <div class="learn-text">O conhecimento especialista é majoritariamente <strong>tácito</strong> — o especialista age por padrões interiorizados que dificilmente articula espontaneamente sem ser provocado por perguntas.</div>
+    </div>
+    <div class="learn-item">
+      <div class="learn-num">2</div>
+      <div class="learn-text">A entrevista semiestruturada é superior à estruturada para domínios de tomada de decisão, pois permite capturar <strong>heurísticas implícitas</strong> que não aparecem em respostas diretas.</div>
+    </div>
+    <div class="learn-item">
+      <div class="learn-num">3</div>
+      <div class="learn-text">As <strong>Regras de Produção</strong> (SE...ENTÃO) são eficazes para formalizar raciocínio decisório, mas exigem múltiplas sessões para cobrir todos os cenários do especialista.</div>
+    </div>
+    <div class="learn-item">
+      <div class="learn-num">4</div>
+      <div class="learn-text">A <strong>Rede Semântica</strong> revelou conexões entre conceitos que o especialista não havia explicitado na entrevista, demonstrando que a modelagem é um processo ativo, não apenas transcrição.</div>
+    </div>
+  </div>
+  <div class="slide-number">9 / 10</div>
+</div>
+
+<!-- SLIDE 10: Referências -->
+<div class="slide slide-dark" id="s10">
+  <div class="tag">Slide 10 — Referências</div>
+  <h2 class="slide-title">Referências</h2>
+  <div class="box" style="margin-top: 24px;">
+    <div class="ref-item"><strong>Especialista:</strong> Ricardo Campos Mendonça. Entrevista semiestruturada realizada em 06/05/2026. Agência Vektor Comunicação Integrada, Salvador, BA.</div>
+    <div class="ref-item"><strong>Disciplina:</strong> Gestão do Conhecimento — UCSal, 2026. Conteúdo programático Unidade 02: Aquisição e Modelagem do Conhecimento Especialista.</div>
+    <div class="ref-item"><strong>NONAKA, I.; TAKEUCHI, H.</strong> Criação de conhecimento na empresa. Rio de Janeiro: Campus, 1997.</div>
+    <div class="ref-item"><strong>TURBAN, E.</strong> Decision Support and Expert Systems: Management Support Systems. 4. ed. New Jersey: Prentice Hall, 1995.</div>
+    <div class="ref-item"><strong>RICH, E.; KNIGHT, K.</strong> Artificial Intelligence. 2. ed. New York: McGraw-Hill, 1991. (Capítulo: Knowledge Representation)</div>
+  </div>
+  <div class="slide-number">10 / 10</div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button onclick="prev()">← Anterior</button>
+  <button onclick="next()">Próximo →</button>
+</div>
+
+<script>
+  let current = 1;
+  const total = 10;
+
+  function show(n) {
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    document.getElementById('s' + n).classList.add('active');
+    document.getElementById('progress').style.width = (n / total * 100) + '%';
+    current = n;
+  }
+
+  function next() { if (current < total) show(current + 1); }
+  function prev() { if (current > 1) show(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') next();
+    if (e.key === 'ArrowLeft') prev();
+  });
+
+  show(1);
+</script>
+
+</body>
+</html>
